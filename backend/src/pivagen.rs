@@ -12,7 +12,7 @@ pub struct Piva {
 impl Piva {
     pub fn new() -> io::Result<Piva> {
         let messages = load_dataset("db/messages.txt")?;
-        let additional = load_additional("db/addons")?;
+        let additional = load_additional("db/addons").unwrap_or(HashMap::new());
         Ok(Piva {
             messages,
             additional,

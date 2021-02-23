@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 messages_generator = { git = "https://github.com/Termonoid/messages-generator.git" }
+protocol = { path = "../protocol/" }
