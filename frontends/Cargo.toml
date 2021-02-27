@@ -3,6 +3,7 @@
 members = [
 	"vk",
 	"cli",
+	"telegram"
 ]
 
 [profile.release]
