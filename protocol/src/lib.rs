@@ -1,4 +1,5 @@
 use std::io::{self, Read, Write};
+use std::net::TcpStream;
 
 mod traits;
 pub use traits::{FromReader, ToWriter};
@@ -26,23 +27,23 @@ impl ToWriter for Request {
 }
 pub mod client {
     use super::*;
-    pub fn save<W: Write>(content: &str, writer: &mut W) -> io::Result<()> {
+    pub fn save(content: &str) -> io::Result<()> {
+        let mut writer = TcpStream::connect("localhost:7482")?;
         let content = content.to_owned();
         let request = Request {
             write_intent: true,
             content
         };
-        request.to_writer(writer)
+        request.to_writer(&mut writer)
     }
-    pub fn generate<S>(content: &str, stream: &mut S) -> io::Result<String>
-        where S: Read + Write
-    {
+    pub fn generate(content: &str) -> io::Result<String> {
+        let mut stream = TcpStream::connect("localhost:7482")?;
         let content = content.to_owned();
         let request = Request {
             write_intent: false,
             content,
         };
-        request.to_writer(stream)?;
-        String::from_reader(stream)
+        request.to_writer(&mut stream)?;
+        String::from_reader(&mut stream)
     }
 }
