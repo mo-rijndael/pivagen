@@ -18,6 +18,7 @@ struct Chat
 #[derive(Deserialize)]
 struct Sender
 {
+    #[serde(default)]
     is_bot: bool,
     id: i32,
 }
@@ -27,7 +28,9 @@ struct Message
 {
     from: Sender,
     chat: Chat,
-    text: Option<String>
+    text: Option<String>,
+    #[serde(rename = "reply_to_message")]
+    reply: Option<Box<Message>>
 }
 
 #[derive(Deserialize)]
@@ -37,10 +40,10 @@ struct Update
     message: Option<Message>
 }
 #[derive(Deserialize)]
-struct ApiResponse
+struct ApiResponse<T>
 {
     ok:bool,
-    result: Vec<Update>
+    result: T
 }
 
 struct LongPoll
@@ -78,7 +81,7 @@ impl LongPoll
                 }
             };
         if cfg!(debug_assertions) {println!("{}", response);}
-        let updates = serde_json::from_str::<ApiResponse>(&response).unwrap();
+        let updates = serde_json::from_str::<ApiResponse<Vec<Update>>>(&response).unwrap();
         if !updates.ok
             {return}
         if !updates.result.is_empty() {
@@ -115,42 +118,46 @@ fn send_message(chat_id: i64, text: &str)
             eprintln!("{}",e)
         };
 }
-fn get_my_id() -> i32 {
+fn get_my_id() -> Result<i32, ureq::Error> {
     let response = ureq::post(&format!("https://api.telegram.org/bot{}/{}", TOKEN, "getMe"))
               .call()
-              .into_string()
-              .unwrap();
-    let me: Sender = serde_json::from_str(&response).unwrap();
-    me.id
+              .into_string()?;
+    let me: ApiResponse<Sender> = serde_json::from_str(&response).unwrap();
+    Ok(me.result.id)
 }
-fn process_message(m: Message) -> Result<(), Box<dyn Error>> {
-    if &m.chat.type_ == "channel" {
+fn process_message(m: Message, my_id: i32) -> Result<(), Box<dyn Error>> {
+    if m.chat.type_ == "channel" {
         return Ok(())
     }
     if let Some(text) = m.text {
         if !m.from.is_bot {
-            client::save(&text)?;
+            client::save(&text).unwrap_or(());
         }
         if rand::thread_rng().gen_bool(0.05)
         || m.chat.type_ == "private"
         || text.contains("/pivagen")
         {
-            let reply = client::generate(&text)?;
+            let reply = client::generate(&text).unwrap_or(String::from("Ааеаооеаое"));
             send_message(m.chat.id, &reply)
         }
 
+        else if let Some(reply) = m.reply {
+            if reply.from.id == my_id {
+                let reply = client::generate(&text).unwrap_or(String::from("Ааеаеоаоео"));
+                send_message(m.chat.id, &reply);
+            }
+        }
     }
     Ok(())    
 }
 fn main()
 {
-    let mut rand = rand::thread_rng();
     let long_poll = LongPoll::new();
-    let me = get_my_id();
+    let me = get_my_id().expect("Failed to get self id");
 
     for e in long_poll {
         if let Some(m) = e.message {
-            match process_message(m) {
+            match process_message(m, me) {
                 Ok(()) => {}
                 Err(e) => {println!("Error in message processing: {}", e)}
             }

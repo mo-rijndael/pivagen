@@ -169,17 +169,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
 
 [[package]]
-name = "piva-rust-tg"
-version = "0.1.0"
-dependencies = [
- "protocol",
- "rand",
- "serde",
- "serde_json",
- "ureq 1.5.4",
-]
-
-[[package]]
 name = "ppv-lite86"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -450,6 +439,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "telegram"
+version = "0.1.0"
+dependencies = [
+ "protocol",
+ "rand",
+ "serde",
+ "serde_json",
+ "ureq 1.5.4",
 ]
 
 [[package]]
