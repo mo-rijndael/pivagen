@@ -13,8 +13,8 @@ Bots (frontends) connects to engiene using simple protocol over TCP.
 Which frontends is now supported?
 ---------------------------------
 
-VKontakte ([link](https://vk.com/pivagen "Talk to Piva in VKontakte"))
-Telegram ([link](https://t.me/pivagen_bot))
-CLI (you should have generator backend running on your machine)
+- VKontakte ([link](https://vk.com/pivagen "Talk to Piva in VKontakte"))
+- Telegram ([link](https://t.me/pivagen_bot))
+- CLI (you should have generator backend running on your machine)
 
 You can suggest new frontend in issues.
