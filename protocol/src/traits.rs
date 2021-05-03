@@ -1,55 +1,50 @@
-use std::io::{self, Read, Write, Error, ErrorKind};
-use std::mem::size_of;
+use std::io::{self, Error, ErrorKind};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpStream};
+use async_trait::async_trait;
 
-pub trait FromReader {
-    fn from_reader<R: Read>(reader: &mut R) -> io::Result<Self>
+#[async_trait]
+pub trait TcpSend {
+    async fn send(&self, stream: &mut TcpStream) -> io::Result<()>;
+}
+#[async_trait]
+pub trait TcpReceive {
+    async fn receive(stream: &mut TcpStream) -> io::Result<Self>
         where Self: Sized;
 }
-pub trait ToWriter {
-    fn to_writer<W: Write>(&self, writer: &mut W) -> io::Result<()>;
+
+#[async_trait]
+impl TcpSend for bool {
+    async fn send(&self, stream: &mut TcpStream) -> io::Result<()> {
+        stream.write_u8(*self as u8).await?;
+        Ok(())
+    }
 }
 
-impl FromReader for usize {
-    fn from_reader<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let mut buffer = [0u8; size_of::<Self>()];
-        reader.read_exact(&mut buffer)?;
-        Ok(usize::from_le_bytes(buffer))
-    }
-}
-impl FromReader for String {
-    fn from_reader<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let len = usize::from_reader(reader)?;
-        let mut buffer = vec![0u8; len];
-        reader.read_exact(&mut buffer)?;
-        let string = String::from_utf8(buffer)
-            .map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
-        Ok(string)
-    }
-}
-impl FromReader for bool {
-    fn from_reader<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let mut buffer = [0u8; size_of::<bool>()];
-        reader.read_exact(&mut buffer)?;
-        let [res] = buffer;
-        Ok(res != 0)
-    }
-}
-impl ToWriter for usize {
-    fn to_writer<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        let buffer = self.to_le_bytes();
-        writer.write_all(&buffer)?;
+#[async_trait]  
+impl TcpSend for String {
+    async fn send(&self, stream: &mut TcpStream) -> io::Result<()> {
+        stream.write_u64(self.len() as u64).await?;
+        stream.write_all(self.as_bytes()).await?;
         Ok(())
     }
 }
-impl ToWriter for String {
-    fn to_writer<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        self.len().to_writer(writer)?;
-        writer.write_all(self.as_bytes())
+
+#[async_trait]
+impl TcpReceive for bool {
+    async fn receive(stream: &mut TcpStream) -> io::Result<Self> {
+        let byte = stream.read_u8().await?;
+        Ok(byte != 0)
     }
 }
-impl ToWriter for bool {
-    fn to_writer<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_all(&[*self as u8])?;
-        Ok(())
+
+#[async_trait]
+impl TcpReceive for String {
+    async fn receive(stream: &mut TcpStream) -> io::Result<Self> {
+        let len = stream.read_u64().await?;
+        let mut buffer = vec![0u8; len as usize];
+        stream.read_exact(&mut buffer).await?;
+        let response = String::from_utf8(buffer).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
+        Ok(response)
     }
 }

@@ -1,49 +1,51 @@
-use std::io::{self, Read, Write};
-use std::net::TcpStream;
+use std::io;
+use tokio::net::TcpStream;
+use async_trait::async_trait;
 
 mod traits;
-pub use traits::{FromReader, ToWriter};
+pub use traits::{TcpSend, TcpReceive};
 
 pub struct Request {
     pub write_intent: bool,
     pub content: String,
 }
-impl FromReader for Request {
-    fn from_reader<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let write_intent = bool::from_reader(reader)?;
-        let content = String::from_reader(reader)?;
-        Ok(Self {
-            write_intent,
-            content
-        })
-    }    
-}
-impl ToWriter for Request {
-    fn to_writer<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        self.write_intent.to_writer(writer)?;
-        self.content.to_writer(writer)?;
+#[async_trait]
+impl TcpSend for Request {
+    async fn send(&self, stream: &mut TcpStream) -> io::Result<()> {
+        self.write_intent.send(stream).await?;
+        self.content.send(stream).await?;
         Ok(())
+    }
+}
+
+#[async_trait]
+impl TcpReceive for Request {
+    async fn receive(stream: &mut TcpStream) -> io::Result<Self> {
+        let write_intent = bool::receive(stream).await?;
+        let content = String::receive(stream).await?;
+        let request = Request {write_intent, content};
+        Ok(request)
     }
 }
 pub mod client {
     use super::*;
-    pub fn save(content: &str) -> io::Result<()> {
-        let mut writer = TcpStream::connect("localhost:7482")?;
+    pub async fn save(content: &str) -> io::Result<()> {
+        let mut writer = TcpStream::connect("localhost:7482").await?;
         let content = content.to_owned();
         let request = Request {
             write_intent: true,
             content
         };
-        request.to_writer(&mut writer)
+        request.send(&mut writer).await
     }
-    pub fn generate(content: &str) -> io::Result<String> {
-        let mut stream = TcpStream::connect("localhost:7482")?;
+    pub async fn generate(content: &str) -> io::Result<String> {
+        let mut stream = TcpStream::connect("localhost:7482").await?;
         let content = content.to_owned();
         let request = Request {
             write_intent: false,
             content,
         };
-        request.to_writer(&mut stream)?;
-        String::from_reader(&mut stream)
+        request.send(&mut stream).await?;
+        String::receive(&mut stream).await
     }
 }
