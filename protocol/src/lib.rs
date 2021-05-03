@@ -1,9 +1,9 @@
+use async_trait::async_trait;
 use std::io;
 use tokio::net::TcpStream;
-use async_trait::async_trait;
 
 mod traits;
-pub use traits::{TcpSend, TcpReceive};
+pub use traits::{TcpReceive, TcpSend};
 
 pub struct Request {
     pub write_intent: bool,
@@ -23,7 +23,10 @@ impl TcpReceive for Request {
     async fn receive(stream: &mut TcpStream) -> io::Result<Self> {
         let write_intent = bool::receive(stream).await?;
         let content = String::receive(stream).await?;
-        let request = Request {write_intent, content};
+        let request = Request {
+            write_intent,
+            content,
+        };
         Ok(request)
     }
 }
@@ -34,7 +37,7 @@ pub mod client {
         let content = content.to_owned();
         let request = Request {
             write_intent: true,
-            content
+            content,
         };
         request.send(&mut writer).await
     }

@@ -78,13 +78,20 @@ impl LongPoll {
         res.group_id = id;
         Ok(res)
     }
-    pub async fn get_events(&mut self, client: &reqwest::Client) -> Result<Vec<Message>, Box<dyn Error>> {
-        let response = client.post(&self.server).form(&[
-            ("act", "a_check"),
-            ("key", &self.key),
-            ("ts", &self.ts),
-            ("wait", "25"),
-        ]).send().await?;
+    pub async fn get_events(
+        &mut self,
+        client: &reqwest::Client,
+    ) -> Result<Vec<Message>, Box<dyn Error>> {
+        let response = client
+            .post(&self.server)
+            .form(&[
+                ("act", "a_check"),
+                ("key", &self.key),
+                ("ts", &self.ts),
+                ("wait", "25"),
+            ])
+            .send()
+            .await?;
         let text = response.text().await?;
         if cfg!(debug_assertions) {
             println!("{}", &text)
@@ -92,7 +99,7 @@ impl LongPoll {
         match serde_json::from_str::<LongPollResult>(&text)? {
             LongPollResult::Events(ok) => {
                 self.ts = ok.ts;
-                return Ok(ok.updates.into_iter().map(|o|o.object).collect())
+                return Ok(ok.updates.into_iter().map(|o| o.object).collect());
             }
             LongPollResult::Error(err) => {
                 println!("got longpoll error {}", err.failed);
@@ -116,13 +123,17 @@ impl LongPoll {
 impl Message {
     pub async fn reply(&self, text: &str, client: &reqwest::Client) {
         let random_id: i64 = rand::random();
-        let response = client.post("https://api.vk.com/method/messages.send").form(&[
-            ("access_token", TOKEN),
-            ("v", "5.95"),
-            ("random_id", &random_id.to_string()),
-            ("peer_id", &self.peer_id.to_string()),
-            ("message", text),
-        ]).send().await;
+        let response = client
+            .post("https://api.vk.com/method/messages.send")
+            .form(&[
+                ("access_token", TOKEN),
+                ("v", "5.95"),
+                ("random_id", &random_id.to_string()),
+                ("peer_id", &self.peer_id.to_string()),
+                ("message", text),
+            ])
+            .send()
+            .await;
         if response.is_err() {
             eprintln!("ERROR {}", response.unwrap_err())
         }

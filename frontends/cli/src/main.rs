@@ -9,11 +9,10 @@ fn main() -> io::Result<()> {
         io::stdin().read_line(&mut line)?;
         let request = Request {
             write_intent: false,
-            content: line
+            content: line,
         };
         request.to_writer(&mut stream)?;
         let response = String::from_reader(&mut stream)?;
         println!("{}", response);
-
     }
 }

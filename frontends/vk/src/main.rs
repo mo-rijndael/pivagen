@@ -24,8 +24,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         let events = match longpoll.get_events(&client).await {
             Ok(events) => events,
-            Err(e) => {eprintln!("{}", e);
-                       continue}
+            Err(e) => {
+                eprintln!("{}", e);
+                continue;
+            }
         };
         for m in events {
             if m.from_user() {
@@ -40,7 +42,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     Ok(reply) => reply,
                     Err(e) => {
                         eprintln!("{}", e);
-                        backend_unavailable.clone()},
+                        backend_unavailable.clone()
+                    }
                 };
                 m.reply(&reply, &client).await
             } else if rand.gen_bool(0.05) {

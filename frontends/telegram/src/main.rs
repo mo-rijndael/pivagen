@@ -1,22 +1,22 @@
 use protocol::client;
 use rand::Rng;
-use teloxide::prelude::*;
-use std::io;
-use std::fmt;
 use std::convert::From;
+use std::fmt;
+use std::io;
+use teloxide::prelude::*;
 
 const TOKEN: &str = env!("TOKEN");
 
 #[derive(Debug)]
 enum BotError {
     TelegramError(teloxide::RequestError),
-    BackendError(io::Error)
+    BackendError(io::Error),
 }
 impl fmt::Display for BotError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::TelegramError(e) => write!(f, "Problem with API: {}", e),
-            Self::BackendError(e) => write!(f, "Problem with backend: {}", e)
+            Self::BackendError(e) => write!(f, "Problem with backend: {}", e),
         }
     }
 }
@@ -32,19 +32,26 @@ impl From<io::Error> for BotError {
 }
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-     let bot = Bot::new(TOKEN);
-     let my_id = bot.get_me().send().await.expect("Failed to get self").user.id;
-     teloxide::repl(bot, move |event| async move{
-         if let Some(text) = event.update.text() {
-             client::save(text).await?;
-         };
-         if should_reply(&event, my_id) {
-             let text = event.update.text().unwrap_or("");
-             let reply = client::generate(text).await?;
-             event.answer(reply).send().await?;
-         };
-         Result::<_, BotError>::Ok(())
-     }).await;
+    let bot = Bot::new(TOKEN);
+    let my_id = bot
+        .get_me()
+        .send()
+        .await
+        .expect("Failed to get self")
+        .user
+        .id;
+    teloxide::repl(bot, move |event| async move {
+        if let Some(text) = event.update.text() {
+            client::save(text).await?;
+        };
+        if should_reply(&event, my_id) {
+            let text = event.update.text().unwrap_or("");
+            let reply = client::generate(text).await?;
+            event.answer(reply).send().await?;
+        };
+        Result::<_, BotError>::Ok(())
+    })
+    .await;
 }
 
 type Cx = UpdateWithCx<Bot, Message>;

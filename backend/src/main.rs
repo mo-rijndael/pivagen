@@ -5,7 +5,10 @@ use protocol::*;
 
 mod pivagen;
 
-async fn handle_connection(mut connection: TcpStream, generator: &mut pivagen::Piva) -> io::Result<()> {
+async fn handle_connection(
+    mut connection: TcpStream,
+    generator: &mut pivagen::Piva,
+) -> io::Result<()> {
     let request = Request::receive(&mut connection).await?;
     if request.write_intent {
         generator.save_message(request.content)?;
@@ -16,17 +19,19 @@ async fn handle_connection(mut connection: TcpStream, generator: &mut pivagen::P
     Ok(())
 }
 
-#[tokio::main(flavor="current_thread")]
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> io::Result<()> {
     let mut generator = pivagen::Piva::new()?;
     let listener = TcpListener::bind("localhost:7482").await?; // PIVA on T9 keyboard
-    
+
     loop {
         let connection = listener.accept().await;
         if let Ok((connection, _)) = connection {
             match handle_connection(connection, &mut generator).await {
-                Ok(_) =>  {},
-                Err(e) => {println!("Connection lost: {}", e)}
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Connection lost: {}", e)
+                }
             };
         }
     }

@@ -1,7 +1,7 @@
+use async_trait::async_trait;
 use std::io::{self, Error, ErrorKind};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpStream};
-use async_trait::async_trait;
+use tokio::net::TcpStream;
 
 #[async_trait]
 pub trait TcpSend {
@@ -10,7 +10,8 @@ pub trait TcpSend {
 #[async_trait]
 pub trait TcpReceive {
     async fn receive(stream: &mut TcpStream) -> io::Result<Self>
-        where Self: Sized;
+    where
+        Self: Sized;
 }
 
 #[async_trait]
@@ -21,7 +22,7 @@ impl TcpSend for bool {
     }
 }
 
-#[async_trait]  
+#[async_trait]
 impl TcpSend for String {
     async fn send(&self, stream: &mut TcpStream) -> io::Result<()> {
         stream.write_u64(self.len() as u64).await?;
@@ -44,7 +45,8 @@ impl TcpReceive for String {
         let len = stream.read_u64().await?;
         let mut buffer = vec![0u8; len as usize];
         stream.read_exact(&mut buffer).await?;
-        let response = String::from_utf8(buffer).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
+        let response =
+            String::from_utf8(buffer).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
         Ok(response)
     }
 }
