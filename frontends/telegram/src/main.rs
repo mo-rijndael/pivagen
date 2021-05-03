@@ -1,7 +1,9 @@
 use protocol::client;
 use rand::Rng;
-use teloxide::requests::{Requester, Request};
+use teloxide::prelude::*;
 use std::io;
+use std::fmt;
+use std::convert::From;
 
 const TOKEN: &str = env!("TOKEN");
 
@@ -10,27 +12,27 @@ enum BotError {
     TelegramError(teloxide::RequestError),
     BackendError(io::Error)
 }
-impl std::fmt::Display for BotError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for BotError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::TelegramError(e) => write!(f, "Problem with API: {}", e),
             Self::BackendError(e) => write!(f, "Problem with backend: {}", e)
         }
     }
 }
-impl std::convert::From<teloxide::RequestError> for BotError {
+impl From<teloxide::RequestError> for BotError {
     fn from(e: teloxide::RequestError) -> Self {
         Self::TelegramError(e)
     }
 }
-impl std::convert::From<io::Error> for BotError {
+impl From<io::Error> for BotError {
     fn from(e: io::Error) -> Self {
         Self::BackendError(e)
     }
 }
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-     let bot = teloxide::Bot::new(TOKEN);
+     let bot = Bot::new(TOKEN);
      let my_id = bot.get_me().send().await.expect("Failed to get self").user.id;
      teloxide::repl(bot, move |event| async move{
          if let Some(text) = event.update.text() {
@@ -38,29 +40,18 @@ async fn main() {
          };
          if should_reply(&event, my_id) {
              let text = event.update.text().unwrap_or("");
-             event.answer(client::generate(text).await?).send().await?;
+             let reply = client::generate(text).await?;
+             event.answer(reply).send().await?;
          };
          Result::<_, BotError>::Ok(())
      }).await;
 }
 
-type Cx = teloxide::dispatching::UpdateWithCx<teloxide::Bot, teloxide::types::Message>;
+type Cx = UpdateWithCx<Bot, Message>;
 fn should_reply(m: &Cx, my_id: i64) -> bool {
-    if m.update.chat.is_private() {
-        return true
-    }
-    else if let Some(text) = m.update.text() {
-        if text.starts_with("/pivagen") {
-            return true
-        }
-    }
-    else if let Some(from) = m.update.from() {
-        if from.id == my_id {
-            return true
-        }
-    }
-    if rand::thread_rng().gen_bool(0.15) {
-        return true
-    }
-    false
+    let is_private = m.update.chat.is_private();
+    let is_command = m.update.text().map_or(false, |s| s.starts_with("/pivagen"));
+    let is_reply_to_mine = m.update.from().map_or(false, |user| user.id == my_id);
+    let random = rand::thread_rng().gen_bool(0.15);
+    is_private || is_reply_to_mine || is_command || random
 }
