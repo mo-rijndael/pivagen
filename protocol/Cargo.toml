@@ -3,9 +3,14 @@ name = "protocol"
 version = "0.1.0"
 authors = ["Termonoid <termonoid@yandex.ru>"]
 edition = "2018"
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = {version = "1", features = ["net", "io-util"]}
-async-trait = "0.1"
+tokio = { version = "1", features = ["net", "io-util"], optional = true }
+async-trait = { version = "0.1", optional = true }
+
+[features]
+sync = []
+async = ["tokio", "async-trait"]

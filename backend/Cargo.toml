@@ -8,5 +8,5 @@ edition = "2018"
 
 [dependencies]
 messages_generator = { git = "https://github.com/Termonoid/messages-generator.git" }
-protocol = { path = "../protocol/" }
+protocol = { path = "../protocol/", features = ["async"]}
 tokio = { version="1", features=["net", "rt", "macros"]}

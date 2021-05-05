@@ -10,4 +10,4 @@ teloxide = "0.4"
 rand = "0.7"
 tokio = { version = "1", features = ["rt", "macros"] }
 lazy_static = "1"
-protocol = { path = "../../protocol/" }
+protocol = { path = "../../protocol/", features = ["async"] }

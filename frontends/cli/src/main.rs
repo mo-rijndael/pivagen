@@ -1,4 +1,4 @@
-use protocol::*;
+use protocol::sync::*;
 use std::io;
 use std::net::TcpStream;
 
@@ -7,12 +7,8 @@ fn main() -> io::Result<()> {
         let mut stream = TcpStream::connect("localhost:7482")?;
         let mut line = String::new();
         io::stdin().read_line(&mut line)?;
-        let request = Request {
-            write_intent: false,
-            content: line,
-        };
-        request.to_writer(&mut stream)?;
-        let response = String::from_reader(&mut stream)?;
+        Request::generate(line).send(&mut stream)?;
+        let response = String::receive(&mut stream)?;
         println!("{}", response);
     }
 }

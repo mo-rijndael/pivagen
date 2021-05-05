@@ -1,4 +1,4 @@
-use protocol::client;
+use protocol::asyncio::client;
 use rand::Rng;
 use std::convert::From;
 use std::fmt;

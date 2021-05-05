@@ -1,7 +1,7 @@
 use std::io::{self};
 use tokio::net::{TcpListener, TcpStream};
 
-use protocol::*;
+use protocol::asyncio::{Request, TcpReceive, TcpSend};
 
 mod pivagen;
 
