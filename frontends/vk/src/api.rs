@@ -9,8 +9,8 @@ macro_rules! gen_vk_call {
             let client = reqwest::Client::new();
             let response = client.post(concat!("https://api.vk.com/method/", $method))
                 .form(&[
-                    ("access_token", TOKEN),
                     ("v", "5.95"),
+                    ("access_token", &TOKEN),
                $($( (stringify!($argument), &$argument.to_string()) ),+ )?
                 ])
                 .send().await?;
@@ -126,8 +126,8 @@ impl Message {
         let response = client
             .post("https://api.vk.com/method/messages.send")
             .form(&[
-                ("access_token", TOKEN),
                 ("v", "5.95"),
+                ("access_token", &TOKEN),
                 ("random_id", &random_id.to_string()),
                 ("peer_id", &self.peer_id.to_string()),
                 ("message", text),

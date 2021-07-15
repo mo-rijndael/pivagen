@@ -1,13 +1,19 @@
+use lazy_static::lazy_static;
 use protocol::asyncio::client;
 use rand::Rng;
+use std::env;
 use std::error::Error;
 use tokio_postgres::NoTls;
+
 mod api;
 use api::*;
 
-const TOKEN: &str = env!("TOKEN");
-
 mod metrics;
+
+lazy_static! {
+    static ref TOKEN: String = env::var("TOKEN").expect("No TOKEN set");
+    static ref DB_URL: String = env::var("DB_URL").expect("Failed to get DB_URL");
+}
 
 fn should_reply(message: &Message, my_id: i32) -> bool {
     message.is_private()
@@ -20,8 +26,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut rand = rand::thread_rng();
     let group_id = get_me().await?.response[0].id;
     let client = reqwest::Client::new();
-    let (database, connection) =
-        tokio_postgres::connect("postgres://pivagen:passwd@localhost/metrics", NoTls).await?;
+    let (database, connection) = tokio_postgres::connect(&DB_URL, NoTls).await?;
     tokio::spawn(async move {
         if let Err(e) = connection.await {
             eprintln!("Connection lost {}", e);

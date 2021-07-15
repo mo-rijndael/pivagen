@@ -1459,6 +1459,7 @@ checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
 name = "vk"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
  "protocol",
  "rand 0.8.3",
  "reqwest",
