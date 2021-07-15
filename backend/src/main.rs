@@ -10,6 +10,7 @@ async fn handle_connection(
     generator: &mut pivagen::Piva,
 ) -> io::Result<()> {
     let request = Request::receive(&mut connection).await?;
+    dbg!(&request);
     if request.write_intent {
         generator.save_message(request.content)?;
     } else {
