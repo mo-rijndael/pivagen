@@ -20,7 +20,8 @@ impl TcpSend for bool {
 
 impl TcpSend for String {
     fn send(&self, stream: &mut TcpStream) -> io::Result<()> {
-        stream.write_all(&(self.len() as u64).to_be_bytes())?;
+        let len = self.len() as u64;
+        stream.write_all(&len.to_be_bytes())?;
         stream.write_all(self.as_bytes())?;
         Ok(())
     }

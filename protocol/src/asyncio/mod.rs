@@ -39,6 +39,7 @@ pub mod client {
         let mut stream = TcpStream::connect("localhost:7482").await?;
         let content = content.to_owned();
         Request::generate(content).send(&mut stream).await?;
-        String::receive(&mut stream).await
+        let response = String::receive(&mut stream).await?;
+        Ok(response)
     }
 }
