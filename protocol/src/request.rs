@@ -12,7 +12,7 @@ impl Request {
     }
     pub fn generate(content: String) -> Self {
         Self {
-            write_intent: true,
+            write_intent: false,
             content,
         }
     }
