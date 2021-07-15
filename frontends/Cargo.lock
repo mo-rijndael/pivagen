@@ -939,7 +939,6 @@ dependencies = [
 name = "telegram"
 version = "0.1.0"
 dependencies = [
- "lazy_static",
  "protocol",
  "rand 0.7.3",
  "teloxide",
