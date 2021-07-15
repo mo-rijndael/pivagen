@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Request {
     pub write_intent: bool,
     pub content: String,
