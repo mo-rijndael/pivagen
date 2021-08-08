@@ -5,8 +5,6 @@ use std::fmt;
 use std::io;
 use teloxide::prelude::*;
 
-const TOKEN: &str = env!("TOKEN");
-
 #[derive(Debug)]
 enum BotError {
     TelegramError(teloxide::RequestError),
@@ -32,7 +30,8 @@ impl From<io::Error> for BotError {
 }
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let bot = Bot::new(TOKEN);
+    let token = std::env::var("TOKEN").expect("No TOKEN specified");
+    let bot = Bot::new(token);
     let my_id = bot
         .get_me()
         .send()
