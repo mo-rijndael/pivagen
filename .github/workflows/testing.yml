@@ -19,6 +19,6 @@ jobs:
 
     - uses: actions/checkout@v2
     - name: Test backend
-      run: cd backend && cargo test --verbose
+      run: cd backend && cargo test
     - name: Test frontends
-      run: cd frontends && cargo test --verbose
+      run: cd frontends && cargo test
