@@ -12,10 +12,10 @@ jobs:
     steps:
     - uses: Swatinem/rust-cache@v1.3.0
       with:
-        working-directory: backend
+        working-directory: ./backend
     - uses: Swatinem/rust-cache@v1.3.0
       with:
-        working-directory: frontends
+        working-directory: ./frontends
 
     - uses: actions/checkout@v2
     - name: Test backend
