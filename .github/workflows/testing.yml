@@ -1,0 +1,20 @@
+name: Rust
+
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v1.3.0
+
+    - uses: actions/checkout@v2
+    - name: Test backend
+      run: cd backend && cargo test --verbose
+    - name: Test frontends
+      run: cd frontends && cargo test --verbose
