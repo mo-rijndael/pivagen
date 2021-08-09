@@ -25,3 +25,5 @@ jobs:
       run: cd backend && cargo test
     - name: Test frontends
       run: cd frontends && cargo test
+    - name: Test protocol imp;ementation
+      run: cd protocol && cargo test
