@@ -1,4 +1,4 @@
-use messages_generator::Generator;
+use messages_generator::{Generator, Limit};
 use std::collections::HashMap;
 use std::fs::{read_dir, OpenOptions};
 use std::io::{self, BufRead, Read, Write};
@@ -11,8 +11,14 @@ pub struct Piva {
 
 impl Piva {
     pub fn new() -> io::Result<Piva> {
-        let messages = load_dataset("db/messages.txt")?;
         let additional = load_additional("db/addons").unwrap_or(HashMap::new());
+        let messages = load_dataset(
+            "db/messages.txt",
+            Limit::Limited {
+                min: 8000,
+                overflow: 1000,
+            },
+        )?;
         Ok(Piva {
             messages,
             additional,
