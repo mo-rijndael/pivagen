@@ -30,7 +30,7 @@ impl Piva {
         }
         Ok(())
     }
-    pub fn generate_answer(&self, message: &str) -> String {
+    pub fn generate_answer(&self, message: &str) -> Option<String> {
         let message = message.to_lowercase();
         for (k, v) in self.additional.iter() {
             if message.contains(k) {

@@ -1,7 +1,9 @@
-use std::io::{self};
+use std::io;
 use tokio::net::{TcpListener, TcpStream};
 
 use protocol::asyncio::{Request, TcpReceive, TcpSend};
+
+const DEFAULT_ANSWER: &str = "хуй тебе";
 
 mod pivagen;
 
@@ -13,7 +15,9 @@ async fn handle_connection(
     if request.write_intent {
         generator.save_message(request.content)?;
     } else {
-        let answer = generator.generate_answer(&request.content);
+        let answer = generator
+            .generate_answer(&request.content)
+            .unwrap_or_else(|| DEFAULT_ANSWER.to_owned());
         answer.send(&mut connection).await?;
     }
     Ok(())
