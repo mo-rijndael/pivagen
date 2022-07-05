@@ -10,3 +10,7 @@ edition = "2018"
 messages_generator = { git = "https://github.com/Termonoid/messages-generator.git" }
 protocol = { path = "../protocol/", features = ["async"]}
 tokio = { version="1", features=["net", "rt", "macros"]}
+
+[profile.release]
+lto = true
+codegen-units = 1
