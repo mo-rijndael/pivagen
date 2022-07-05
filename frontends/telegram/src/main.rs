@@ -39,35 +39,24 @@ async fn main() {
         .expect("Failed to get self")
         .user
         .id;
-    teloxide::repl(bot, move |event| async move {
-        if let Err(e) = handle_message(event, my_id).await {
-            eprintln!("{:#}", e);
+    teloxide::repl(bot, move |message: Message, bot: Bot| async move {
+        if let Some(text) = message.text() {
+            client::save(text).await?;
         };
-        Result::<_, BotError>::Ok(())
+        if should_reply(&message, my_id) {
+            let text = message.text().unwrap_or("");
+            let reply = client::generate(text).await?;
+            bot.send_message(message.chat.id, reply).send().await?;
+        };
+        Result::<(), BotError>::Ok(())
     })
     .await;
 }
 
-type Cx = UpdateWithCx<Bot, Message>;
-fn should_reply(m: &Cx, my_id: i64) -> bool {
-    let is_private = m.update.chat.is_private();
-    let is_command = m.update.text().map_or(false, |s| s.starts_with("/pivagen"));
-    let is_reply_to_mine = m.update.from().map_or(false, |user| user.id == my_id);
+fn should_reply(m: &Message, my_id: UserId) -> bool {
+    let is_private = m.chat.is_private();
+    let is_command = m.text().map_or(false, |s| s.starts_with("/pivagen"));
+    let is_reply_to_mine = m.from().map_or(false, |user| user.id == my_id);
     let random = rand::thread_rng().gen_bool(0.15);
     is_private || is_reply_to_mine || is_command || random
-}
-
-async fn handle_message(event: Cx, my_id: i64) -> Result<(), BotError> {
-    if let Some(text) = event.update.text() {
-        println!("Should save: {}", text);
-        client::save(text).await?;
-    };
-    if should_reply(&event, my_id) {
-        let text = event.update.text().unwrap_or("");
-        println!("Must generate");
-        let reply = client::generate(text).await?;
-        println!("Generated {}", reply);
-        event.answer(reply).send().await?;
-    };
-    Ok(())
 }
