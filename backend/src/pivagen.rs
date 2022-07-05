@@ -11,7 +11,6 @@ pub struct Piva {
 
 impl Piva {
     pub fn new() -> io::Result<Piva> {
-        let additional = load_additional("db/addons").unwrap_or(HashMap::new());
         let messages = load_dataset(
             "db/messages.txt",
             Limit::Limited {
@@ -19,6 +18,7 @@ impl Piva {
                 overflow: 1000,
             },
         )?;
+        let additional = load_additional("db/addons").unwrap_or_default();
         Ok(Piva {
             messages,
             additional,
@@ -32,7 +32,7 @@ impl Piva {
             self.messages.train(&message);
             let mut file = OpenOptions::new().append(true).open("db/messages.txt")?;
             message.push('\n');
-            file.write_all(&message.as_bytes())?;
+            file.write_all(message.as_bytes())?;
         }
         Ok(())
     }
@@ -47,38 +47,33 @@ impl Piva {
     }
 }
 
-fn load_dataset<T>(path: T) -> io::Result<Generator>
+fn load_dataset<T>(path: T, limit: Limit) -> io::Result<Generator>
 where
-    T: AsRef<Path> + std::fmt::Debug,
+    T: AsRef<Path>,
 {
-    println!("Loading: {:?} ", &path);
-    let mut generator = Generator::new();
+    let mut generator = Generator::new(limit);
     let mut file = OpenOptions::new().read(true).open(path)?;
     let mut text = String::new();
     file.read_to_string(&mut text)?;
     for line in text.split('\n') {
         generator.train(line);
     }
-    println!("OK");
     Ok(generator)
 }
 fn load_additional(path: &str) -> io::Result<HashMap<String, Generator>> {
     let mut chains = HashMap::new();
-    for file in read_dir(path)? {
-        if let Ok(file) = file {
-            if file.file_type()?.is_file() {
-                let keyword = {
-                    let file = OpenOptions::new().read(true).open(file.path())?;
-                    let mut reader = std::io::BufReader::new(file);
-                    let mut key = String::new();
-                    reader.read_line(&mut key)?;
-                    key.pop();
-                    println!("{}", key);
-                    key
-                };
-                let chain = load_dataset(file.path())?;
-                chains.insert(keyword, chain);
-            }
+    for file in read_dir(path)?.flatten() {
+        if file.file_type()?.is_file() {
+            let keyword = {
+                let file = OpenOptions::new().read(true).open(file.path())?;
+                let mut reader = std::io::BufReader::new(file);
+                let mut key = String::new();
+                reader.read_line(&mut key)?;
+                key.pop();
+                key
+            };
+            let chain = load_dataset(file.path(), Limit::Unlimited)?;
+            chains.insert(keyword, chain);
         }
     }
     Ok(chains)
