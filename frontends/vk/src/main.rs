@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         };
         for m in events {
             use metrics::{write_message, Chat, MsgType};
-            if m.from_user() {
+            if m.is_from_user() {
                 let res = client::save(&m.text).await;
                 if let Err(e) = res {
                     println!("Failed to save: {}", e);

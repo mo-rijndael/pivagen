@@ -99,7 +99,7 @@ impl LongPoll {
         match serde_json::from_str::<LongPollResult>(&text)? {
             LongPollResult::Events(ok) => {
                 self.ts = ok.ts;
-                return Ok(ok.updates.into_iter().map(|o| o.object).collect());
+                Ok(ok.updates.into_iter().map(|o| o.object).collect())
             }
             LongPollResult::Error(err) => {
                 println!("got longpoll error {}", err.failed);
@@ -141,7 +141,7 @@ impl Message {
     pub fn is_private(&self) -> bool {
         self.peer_id < 2_000_000_000
     }
-    pub fn from_user(&self) -> bool {
+    pub fn is_from_user(&self) -> bool {
         self.from_id > 0
     }
 }
