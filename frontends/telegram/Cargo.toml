@@ -10,3 +10,4 @@ teloxide = "0.9"
 rand = "0.7"
 tokio = { version = "1", features = ["rt", "macros"] }
 protocol = { path = "../../protocol/", features = ["async"] }
+thiserror = "1"

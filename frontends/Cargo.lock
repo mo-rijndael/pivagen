@@ -1279,6 +1279,7 @@ dependencies = [
  "protocol",
  "rand 0.7.3",
  "teloxide",
+ "thiserror",
  "tokio",
 ]
 

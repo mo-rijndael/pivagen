@@ -1,52 +1,35 @@
 use protocol::asyncio::client;
 use rand::Rng;
-use std::convert::From;
-use std::fmt;
 use std::io;
 use teloxide::prelude::*;
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 enum BotError {
-    TelegramError(teloxide::RequestError),
-    BackendError(io::Error),
-}
-impl fmt::Display for BotError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::TelegramError(e) => write!(f, "Problem with API: {}", e),
-            Self::BackendError(e) => write!(f, "Problem with backend: {}", e),
-        }
-    }
-}
-impl From<teloxide::RequestError> for BotError {
-    fn from(e: teloxide::RequestError) -> Self {
-        Self::TelegramError(e)
-    }
-}
-impl From<io::Error> for BotError {
-    fn from(e: io::Error) -> Self {
-        Self::BackendError(e)
-    }
+    #[error("Problem with api: {0}")]
+    TelegramError(#[from] teloxide::RequestError),
+
+    #[error("Broblem with backend: {0}")]
+    BackendError(#[from] io::Error),
 }
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let token = std::env::var("TOKEN").expect("No TOKEN specified");
-    let bot = Bot::new(token);
+    let bot = Bot::new(token).auto_send();
     let my_id = bot
         .get_me()
-        .send()
         .await
         .expect("Failed to get self")
         .user
         .id;
-    teloxide::repl(bot, move |message: Message, bot: Bot| async move {
+    teloxide::repl(bot, move |message: Message, bot: AutoSend<Bot>| async move {
         if let Some(text) = message.text() {
             client::save(text).await?;
         };
         if should_reply(&message, my_id) {
             let text = message.text().unwrap_or("");
             let reply = client::generate(text).await?;
-            bot.send_message(message.chat.id, reply).send().await?;
+            bot.send_message(message.chat.id, reply).await?;
         };
         Result::<(), BotError>::Ok(())
     })
