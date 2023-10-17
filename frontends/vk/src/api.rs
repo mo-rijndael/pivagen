@@ -9,7 +9,7 @@ macro_rules! gen_vk_call {
             let client = reqwest::Client::new();
             let response = client.post(concat!("https://api.vk.com/method/", $method))
                 .form(&[
-                    ("v", "5.95"),
+                    ("v", "5.131"),
                     ("access_token", &TOKEN),
                $($( (stringify!($argument), &$argument.to_string()) ),+ )?
                 ])
@@ -25,7 +25,12 @@ macro_rules! gen_vk_call {
 
 #[derive(Deserialize)]
 struct Object {
-    object: Message,
+    object: MessageInline,
+}
+
+#[derive(Deserialize)]
+struct MessageInline {
+    message: Message,
 }
 
 #[derive(Deserialize)]
@@ -99,7 +104,7 @@ impl LongPoll {
         match serde_json::from_str::<LongPollResult>(&text)? {
             LongPollResult::Events(ok) => {
                 self.ts = ok.ts;
-                return Ok(ok.updates.into_iter().map(|o| o.object).collect());
+                return Ok(ok.updates.into_iter().map(|o| o.object.message).collect());
             }
             LongPollResult::Error(err) => {
                 println!("got longpoll error {}", err.failed);
@@ -126,7 +131,7 @@ impl Message {
         let response = client
             .post("https://api.vk.com/method/messages.send")
             .form(&[
-                ("v", "5.95"),
+                ("v", "5.131"),
                 ("access_token", &TOKEN),
                 ("random_id", &random_id.to_string()),
                 ("peer_id", &self.peer_id.to_string()),
